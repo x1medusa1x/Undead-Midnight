@@ -1,11 +1,10 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class FPSController : MonoBehaviour
 {
-    public bool CanMove {get; private set; } = true;
+    public bool CanMove { get; private set; } = true;
     private bool isSprinting => canSprint && Input.GetKey(sprintKey);
     private bool shouldJump => Input.GetKeyDown(jumpKey) && charController.isGrounded;
     private bool shouldCrouch => Input.GetKeyDown(crouchKey) && !duringCrouchAnimation && charController.isGrounded;
@@ -34,10 +33,10 @@ public class FPSController : MonoBehaviour
     [SerializeField] private float slopeSpeed = 8.0f;
 
     [Header("Look Parameters")]
-    [SerializeField, Range(1, 10)] private float lookSpeedX = 2.0f; 
-    [SerializeField, Range(1, 10)] private float lookSpeedY = 2.0f; 
-    [SerializeField, Range(1, 180)] private float upperLookLimit = 80.0f; 
-    [SerializeField, Range(1, 180)] private float lowerLookLimit = 80.0f; 
+    [SerializeField, Range(1, 10)] private float lookSpeedX = 2.0f;
+    [SerializeField, Range(1, 10)] private float lookSpeedY = 2.0f;
+    [SerializeField, Range(1, 180)] private float upperLookLimit = 80.0f;
+    [SerializeField, Range(1, 180)] private float lowerLookLimit = 80.0f;
 
     [Header("Jump Parameters")]
     [SerializeField] private float jumpForce = 8.0f;
@@ -73,7 +72,7 @@ public class FPSController : MonoBehaviour
     [SerializeField] private float crouchStepMultiplier = 1.5f;
     [SerializeField] private float sprintStepMultiplier = 0.6f;
     [SerializeField] private float baseStepVolume = 0.6f;
-    [SerializeField] private float crouchStepVolume = 0.3F;
+    [SerializeField] private float crouchStepVolume = 0.3f;
     [SerializeField] private float sprintStepVolume = 1.0f;
     [SerializeField] private AudioSource footstepAudioSource = default;
     [SerializeField] private AudioClip[] woodClips = default;
@@ -81,7 +80,7 @@ public class FPSController : MonoBehaviour
     [SerializeField] private AudioClip[] grassClips = default;
     [SerializeField] private AudioClip[] defaultClips = default;
     private float footstepTimer = 0;
-    private float GetCurrentOffset => isCrouching ? baseStepSpeed * crouchStepMultiplier : 
+    private float GetCurrentOffset => isCrouching ? baseStepSpeed * crouchStepMultiplier :
         isSprinting ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
     private float GetCurrentSoundVolume => isCrouching ? crouchStepVolume : isSprinting ? sprintStepVolume : baseStepVolume;
 
@@ -93,8 +92,8 @@ public class FPSController : MonoBehaviour
     private bool isSliding
     {
         get
-        { 
-            if(charController.isGrounded && Physics.Raycast(transform.position, Vector3.down, out RaycastHit slopeHit, 2f))
+        {
+            if (charController.isGrounded && Physics.Raycast(transform.position, Vector3.down, out RaycastHit slopeHit, 2f))
             {
                 hitPointNormal = slopeHit.normal;
                 return Vector3.Angle(hitPointNormal, Vector3.up) > charController.slopeLimit;
@@ -132,13 +131,16 @@ public class FPSController : MonoBehaviour
 
     void Update()
     {
-        if(CanMove){
+        if (CanMove)
+        {
             HandleMovementInput();
             HandleMouseLook();
-            if(canJump){
+            if (canJump)
+            {
                 HandleJump();
             }
-            if(canCrouch){
+            if (canCrouch)
+            {
                 HandleCrouch();
             }
             if (canUseHeadBob)
@@ -162,27 +164,31 @@ public class FPSController : MonoBehaviour
         }
     }
 
-    private void HandleMovementInput(){
-        currentInput = new Vector2((isCrouching ? crouchSpeed : isSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Vertical"), 
+    private void HandleMovementInput()
+    {
+        currentInput = new Vector2((isCrouching ? crouchSpeed : isSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Vertical"),
                                     (isCrouching ? crouchSpeed : isSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
         float moveDirectionY = moveDirection.y;
         moveDirection = (transform.TransformDirection(Vector3.forward) * currentInput.x) + (transform.TransformDirection(Vector3.right) * currentInput.y);
         moveDirection.y = moveDirectionY;
     }
 
-    private void HandleMouseLook(){
+    private void HandleMouseLook()
+    {
         rotationX -= Input.GetAxis("Mouse Y") * lookSpeedY;
         rotationX = Mathf.Clamp(rotationX, -upperLookLimit, lowerLookLimit);
         playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
-        transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeedX, 0); 
+        transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeedX, 0);
     }
 
-    private void ApplyFinalMovements(){
-        if(!charController.isGrounded){
+    private void ApplyFinalMovements()
+    {
+        if (!charController.isGrounded)
+        {
             moveDirection.y -= gravity * Time.deltaTime;
         }
 
-        if(willSlideOnSlopes && isSliding)
+        if (willSlideOnSlopes && isSliding)
         {
             moveDirection += new Vector3(hitPointNormal.x, -hitPointNormal.y, hitPointNormal.z) * slopeSpeed;
         }
@@ -190,58 +196,18 @@ public class FPSController : MonoBehaviour
         charController.Move(moveDirection * Time.deltaTime);
     }
 
-    private IEnumerator CrouchStand(){
-        if(isCrouching && Physics.Raycast(playerCamera.transform.position, Vector3.up, 1f)){
-            yield break;
-        }
-
-        duringCrouchAnimation = true;
-
-        float timeElapsed = 0;
-        float targetHeight = isCrouching ? standingHeight : crouchHeight;
-        float currentHeight = charController.height;
-        Vector3 targetCenter = isCrouching ? standingCenter : crouchingCenter;
-        Vector3 currentCenter = charController.center;
-
-        while(timeElapsed < timeToCrouch){
-            charController.height = Mathf.Lerp(currentHeight, targetHeight, timeElapsed/timeToCrouch);
-            charController.center = Vector3.Lerp(currentCenter, targetCenter, timeElapsed/timeToCrouch);
-            timeElapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        charController.height = targetHeight;
-        charController.center = targetCenter;
-
-        isCrouching = !isCrouching;
-
-        duringCrouchAnimation = false;
-    }
-
-    private IEnumerator ToggleZoom(bool isEnter)
+    private void HandleJump()
     {
-        float targetFOV = isEnter ? zoomFOV : defaultFOV;
-        float startingFOV = playerCamera.fieldOfView;
-        float timeElapsed = 0;
-        while(timeElapsed < timeToZoom)
+        if (shouldJump)
         {
-            playerCamera.fieldOfView = Mathf.Lerp(startingFOV, targetFOV, timeElapsed / timeToZoom);
-            timeElapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        playerCamera.fieldOfView = targetFOV;
-        zoomRoutine = null;
-    }
-
-    private void HandleJump() {
-        if(shouldJump){
             moveDirection.y = jumpForce;
         }
     }
 
-    private void HandleCrouch(){
-        if(shouldCrouch){
+    private void HandleCrouch()
+    {
+        if (shouldCrouch)
+        {
             StartCoroutine(CrouchStand());
         }
     }
@@ -268,7 +234,7 @@ public class FPSController : MonoBehaviour
     {
         if (Input.GetKeyDown(zoomKey))
         {
-            if(zoomRoutine != null)
+            if (zoomRoutine != null)
             {
                 StopCoroutine(zoomRoutine);
                 zoomRoutine = null;
@@ -291,19 +257,20 @@ public class FPSController : MonoBehaviour
 
     private void HandleInteractionCheck()
     {
-        if(Physics.Raycast(playerCamera.ViewportPointToRay(interactionRayPoint), out RaycastHit hit, interactionDistance))
+        if (Physics.Raycast(playerCamera.ViewportPointToRay(interactionRayPoint), out RaycastHit hit, interactionDistance))
         {
-            if(hit.collider.gameObject.layer == 10 && 
+            if (hit.collider.gameObject.layer == 10 &&
                 (currentInteractable == null || hit.collider.gameObject.GetInstanceID() != currentInteractable.GetInstanceID()))
             {
                 hit.collider.TryGetComponent(out currentInteractable);
 
                 if (currentInteractable)
                 {
-                    currentInteractable.OnFocus(); 
+                    currentInteractable.OnFocus();
                 }
             }
-        }else if (currentInteractable)
+        }
+        else if (currentInteractable)
         {
             currentInteractable.OnLoseFocus();
             currentInteractable = null;
@@ -312,11 +279,11 @@ public class FPSController : MonoBehaviour
 
     private void HandleInteractionInput()
     {
-        if(Input.GetKeyDown(interactKey) && 
-            currentInteractable != null && 
-            Physics.Raycast(playerCamera.ViewportPointToRay(interactionRayPoint), 
-                out RaycastHit hit, 
-                interactionDistance, 
+        if (Input.GetKeyDown(interactKey) &&
+            currentInteractable != null &&
+            Physics.Raycast(playerCamera.ViewportPointToRay(interactionRayPoint),
+                out RaycastHit hit,
+                interactionDistance,
                 interactionLayer))
         {
             currentInteractable.OnInteract();
@@ -332,7 +299,7 @@ public class FPSController : MonoBehaviour
 
         footstepTimer -= Time.deltaTime;
 
-        if(footstepTimer <= 0)
+        if (footstepTimer <= 0)
         {
             int layerMask = (-1) - (1 << LayerMask.NameToLayer("Player"));
             if (Physics.Raycast(playerCamera.transform.position, Vector3.down, out RaycastHit hit, 3, layerMask))
@@ -356,5 +323,52 @@ public class FPSController : MonoBehaviour
             footstepTimer = GetCurrentOffset;
             footstepAudioSource.volume = GetCurrentSoundVolume;
         }
+    }
+
+    private IEnumerator CrouchStand()
+    {
+        if (isCrouching && Physics.Raycast(playerCamera.transform.position, Vector3.up, 1f))
+        {
+            yield break;
+        }
+
+        duringCrouchAnimation = true;
+
+        float timeElapsed = 0;
+        float targetHeight = isCrouching ? standingHeight : crouchHeight;
+        float currentHeight = charController.height;
+        Vector3 targetCenter = isCrouching ? standingCenter : crouchingCenter;
+        Vector3 currentCenter = charController.center;
+
+        while (timeElapsed < timeToCrouch)
+        {
+            charController.height = Mathf.Lerp(currentHeight, targetHeight, timeElapsed / timeToCrouch);
+            charController.center = Vector3.Lerp(currentCenter, targetCenter, timeElapsed / timeToCrouch);
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        charController.height = targetHeight;
+        charController.center = targetCenter;
+
+        isCrouching = !isCrouching;
+
+        duringCrouchAnimation = false;
+    }
+
+    private IEnumerator ToggleZoom(bool isEnter)
+    {
+        float targetFOV = isEnter ? zoomFOV : defaultFOV;
+        float startingFOV = playerCamera.fieldOfView;
+        float timeElapsed = 0;
+        while (timeElapsed < timeToZoom)
+        {
+            playerCamera.fieldOfView = Mathf.Lerp(startingFOV, targetFOV, timeElapsed / timeToZoom);
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        playerCamera.fieldOfView = targetFOV;
+        zoomRoutine = null;
     }
 }
