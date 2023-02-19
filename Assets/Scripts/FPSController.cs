@@ -9,8 +9,13 @@ public class FPSController : MonoBehaviour
     private bool shouldJump => Input.GetKeyDown(jumpKey) && charController.isGrounded;
     private bool shouldCrouch => Input.GetKeyDown(crouchKey) && !duringCrouchAnimation && charController.isGrounded;
 
+    public bool GetIsSprinting()
+    {
+        return isSprinting;
+    }
+
     [Header("Functional Options")]
-    [SerializeField] private bool canSprint = true;
+    [SerializeField] public bool canSprint = true;
     [SerializeField] private bool canJump = true;
     [SerializeField] private bool canCrouch = true;
     [SerializeField] private bool canUseHeadBob = true;
@@ -115,7 +120,7 @@ public class FPSController : MonoBehaviour
     private CharacterController charController;
 
     private Vector3 moveDirection;
-    private Vector2 currentInput;
+    public Vector2 currentInput;
 
     private float rotationX = 0;
 

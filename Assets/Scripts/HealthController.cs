@@ -40,6 +40,26 @@ public class HealthController : MonoBehaviour
         breathOffsetVolume = currentPlayerHealth <= 60.0f && currentPlayerHealth > 30.0f ?
     0.7f : currentPlayerHealth <= 30.0f && currentPlayerHealth > 0 ?
     0.9f : 0;
+        if (currentPlayerHealth > 0)
+        {
+            StartCoroutine(HurtFlash());
+            if (currentPlayerHealth < 70)
+            {
+                if (!isBreathing)
+                {
+                    StartCoroutine(Breathing());
+                    isBreathing = true;
+                }
+            }
+            else
+            {
+                if (isBreathing)
+                {
+                    StopCoroutine(Breathing());
+                    isBreathing = false;
+                }
+            }
+        }
     }
 
     public void DecreaseHealth()
@@ -60,31 +80,20 @@ public class HealthController : MonoBehaviour
     {
         if (currentPlayerHealth > 0)
         {
-            StartCoroutine(HurtFlash());
             DecreaseHealth();
-            if (currentPlayerHealth < 70)
-            {
-                if (!isBreathing)
-                {
-                    StartCoroutine(Breathing());
-                    isBreathing = true;
-                }
-            }
-            else
-            {
-                if (isBreathing)
-                {
-                    StopCoroutine(Breathing());
-                    isBreathing = false;
-                }
-            }
         }
-        else
+    }
+
+    public void Death()
+    {
+        if (!dead)
         {
+            StopCoroutine(Breathing());
             StartCoroutine(KillPlayer());
-            currentPlayerHealth = 1;
+            StopCoroutine(KillPlayer());
             dead = true;
         }
+        currentPlayerHealth = 1;
     }
 
     public void Heal(float value)
@@ -116,18 +125,14 @@ public class HealthController : MonoBehaviour
     public IEnumerator HurtFlash()
     {
         bloodBorder.enabled = true;
-        playSound(hurtAudioSource, (hurtAudio[UnityEngine.Random.Range(0, hurtAudio.Length - 1)]));
+        SoundManager.PlaySound(hurtAudio[UnityEngine.Random.Range(0, hurtAudio.Length - 1)], hurtAudioSource);
         yield return new WaitForSeconds(hurtTimer);
     }
-
 
     public IEnumerator KillPlayer()
     {
         bloodBorder.enabled = false;
-        if (currentPlayerHealth <= 0)
-        {
-            playSound(deathAudioSource, (deathAudio[UnityEngine.Random.Range(0, deathAudio.Length - 1)]));
-        }
+        SoundManager.PlaySound(deathAudio[UnityEngine.Random.Range(0, deathAudio.Length - 1)], deathAudioSource);
         yield return new WaitForSeconds(hurtTimer);
     }
 
@@ -136,15 +141,15 @@ public class HealthController : MonoBehaviour
         while (currentPlayerHealth <= 60.0f && currentPlayerHealth > 1)
         {
             breathTimer -= Time.deltaTime;
+
             if (breathTimer <= 0)
             {
                 yield return new WaitForSeconds(0.7f);
-                playSound(breatheAudioSource, breathAudio);
+                breatheAudioSource.PlayOneShot(breathAudio);
                 yield return new WaitForSeconds(breathOffset);
                 breathTimer = breathOffset;
             }
             hurtAudioSource.volume = breathOffsetVolume;
         }
-
     }
 }
