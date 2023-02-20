@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.UI;
 
 public class HealthController : MonoBehaviour
@@ -12,6 +13,7 @@ public class HealthController : MonoBehaviour
     private float breathOffsetVolume = 0;
     private float breathTimer = 0;
     private bool isBreathing = false;
+    public bool isHurting = false;
 
     [Header("Blood Image")]
     [SerializeField] private Image bloodBorder = null;
@@ -21,44 +23,58 @@ public class HealthController : MonoBehaviour
     [SerializeField] private AudioClip[] hurtAudio = null;
     [SerializeField] private AudioClip[] deathAudio = null;
     [SerializeField] private AudioClip breathAudio = null;
+    [SerializeField] private AudioMixer audioMixer = null;
     public AudioSource hurtAudioSource;
     public AudioSource deathAudioSource;
     public AudioSource breatheAudioSource;
+
+
+    public IEnumerator coroutine = null;
 
     private void Start()
     {
         hurtAudioSource = GetComponent<AudioSource>();
         deathAudioSource = GetComponent<AudioSource>();
-        breatheAudioSource = GetComponent<AudioSource>();
+        breatheAudioSource = gameObject.AddComponent<AudioSource>();
+        breatheAudioSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Master")[0];
+    }
+
+    private float offsets(float value1, float value2)
+    {
+        return currentPlayerHealth <= 60.0f && currentPlayerHealth > 30.0f ?
+    value1 : currentPlayerHealth <= 30.0f && currentPlayerHealth > 1 ?
+    value2 : 0;
     }
 
     private void Update()
     {
-        breathOffset = currentPlayerHealth <= 60.0f && currentPlayerHealth > 30.0f ?
-    0.5f : currentPlayerHealth <= 30.0f && currentPlayerHealth > 1 ?
-    0.15f : 0;
-        breathOffsetVolume = currentPlayerHealth <= 60.0f && currentPlayerHealth > 30.0f ?
-    0.7f : currentPlayerHealth <= 30.0f && currentPlayerHealth > 0 ?
-    0.9f : 0;
+        breathOffset = offsets(0.5f, 0.15f);
+        breathOffsetVolume = offsets(0.7f, 0.9f);
+        breatheAudioSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Master")[0];
+        coroutine = Breathing();
         if (currentPlayerHealth > 0)
         {
-            StartCoroutine(HurtFlash());
-            if (currentPlayerHealth < 70)
+            if (isHurting == true)
             {
-                if (!isBreathing)
+                StartCoroutine(HurtFlash());
+                if (currentPlayerHealth < 70)
                 {
-                    StartCoroutine(Breathing());
-                    isBreathing = true;
+                    if (!isBreathing)
+                    {
+                        StartCoroutine(coroutine);
+                        isBreathing = true;
+                    }
+                }
+                else
+                {
+                    if (isBreathing)
+                    {
+                        StopCoroutine(Breathing());
+                        isBreathing = false;
+                    }
                 }
             }
-            else
-            {
-                if (isBreathing)
-                {
-                    StopCoroutine(Breathing());
-                    isBreathing = false;
-                }
-            }
+            isHurting = false;
         }
     }
 
@@ -88,7 +104,6 @@ public class HealthController : MonoBehaviour
     {
         if (!dead)
         {
-            StopCoroutine(Breathing());
             StartCoroutine(KillPlayer());
             StopCoroutine(KillPlayer());
             dead = true;
@@ -125,31 +140,25 @@ public class HealthController : MonoBehaviour
     public IEnumerator HurtFlash()
     {
         bloodBorder.enabled = true;
-        SoundManager.PlaySound(hurtAudio[UnityEngine.Random.Range(0, hurtAudio.Length - 1)], hurtAudioSource);
+        hurtAudioSource.PlayOneShot(hurtAudio[UnityEngine.Random.Range(0, hurtAudio.Length - 1)]);
         yield return new WaitForSeconds(hurtTimer);
     }
 
     public IEnumerator KillPlayer()
     {
         bloodBorder.enabled = false;
-        SoundManager.PlaySound(deathAudio[UnityEngine.Random.Range(0, deathAudio.Length - 1)], deathAudioSource);
+        deathAudioSource.PlayOneShot(deathAudio[UnityEngine.Random.Range(0, deathAudio.Length - 1)]);
         yield return new WaitForSeconds(hurtTimer);
     }
 
     public IEnumerator Breathing()
     {
-        while (currentPlayerHealth <= 60.0f && currentPlayerHealth > 1)
-        {
-            breathTimer -= Time.deltaTime;
-
-            if (breathTimer <= 0)
-            {
-                yield return new WaitForSeconds(0.7f);
-                breatheAudioSource.PlayOneShot(breathAudio);
-                yield return new WaitForSeconds(breathOffset);
-                breathTimer = breathOffset;
-            }
-            hurtAudioSource.volume = breathOffsetVolume;
-        }
+        audioMixer.SetFloat("musicVol", breathOffsetVolume);
+        breatheAudioSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Master")[0];
+        breatheAudioSource.clip = breathAudio;
+        breatheAudioSource.loop = true;
+        breatheAudioSource.Play();
+        breatheAudioSource.volume = breathOffsetVolume;
+        yield return new WaitForSeconds(0.7f);
     }
 }

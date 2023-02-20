@@ -19,11 +19,12 @@ public class DamageController : MonoBehaviour
             dmgAudioSource.PlayOneShot(dmgAudio);
             if (healthController.currentPlayerHealth - dmg <= 0)
             {
+                healthController.breatheAudioSource.Stop();
                 healthController.Death();
-                healthController.currentPlayerHealth = 1;
             }
             else
             {
+                healthController.isHurting = true;
                 healthController.currentPlayerHealth -= dmg;
                 healthController.TakeDamage();
             }
@@ -32,6 +33,7 @@ public class DamageController : MonoBehaviour
 
     private void Update()
     {
+
     }
 
 }
