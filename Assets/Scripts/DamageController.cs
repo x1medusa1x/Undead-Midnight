@@ -4,6 +4,7 @@ public class DamageController : MonoBehaviour
 {
     [SerializeField] private float dmg = 10.0f;
     [SerializeField] private HealthController healthController = null;
+    [SerializeField] private StaminaController staminaController = null;
     [SerializeField] private AudioClip dmgAudio = null;
     private AudioSource dmgAudioSource;
 
@@ -19,7 +20,8 @@ public class DamageController : MonoBehaviour
             dmgAudioSource.PlayOneShot(dmgAudio);
             if (healthController.currentPlayerHealth - dmg <= 0)
             {
-                healthController.breatheAudioSource.Stop();
+                healthController.beatAudioSource.Stop();
+                staminaController.heartAudioSource.Stop();
                 healthController.Death();
             }
             else

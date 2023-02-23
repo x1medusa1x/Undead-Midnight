@@ -1,5 +1,7 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Audio;
+
 public class StaminaController : MonoBehaviour
 {
     [Header("Stamina Parameters")]
@@ -17,23 +19,29 @@ public class StaminaController : MonoBehaviour
     [SerializeField] private AudioClip beatAudio = null;
     [SerializeField] private float beatOffset = 0;
     [SerializeField] private float beatOffsetVolume = 0;
-    private float beatTimer = 0;
+    [SerializeField] private AudioMixer audioMixer = null;
     private bool isBeating = false;
-    public AudioSource beatAudioSource;
+    public AudioSource heartAudioSource;
 
     void Start()
     {
-        beatAudioSource = GetComponent<AudioSource>();
+        heartAudioSource = gameObject.AddComponent<AudioSource>();
+        heartAudioSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Master")[2];
+    }
+
+    private float offsets(float value1, float value2)
+    {
+        return currentStamina <= 60.0f && currentStamina > 30.0f ?
+    value1 : currentStamina <= 30.0f && currentStamina > -1 ?
+    value2 : 0;
     }
 
     void Update()
     {
-        beatOffset = currentStamina <= 60.0f && currentStamina > 30.0f ?
-            0.55f : currentStamina <= 30.0f && currentStamina > -1 ?
-            0.35f : 0;
-        beatOffsetVolume = currentStamina <= 60.0f && currentStamina > 30.0f ?
-            0.7f : currentStamina <= 30.0f && currentStamina > -1 ?
-            0.9f : 0;
+        heartAudioSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Master")[2];
+        heartAudioSource.pitch = offsets(1f, 1.5f);
+        heartAudioSource.volume = offsets(0.1f, 0.3f);
+        heartAudioSource.outputAudioMixerGroup.audioMixer.SetFloat("HeartPitch", offsets(1f / 1f, 1f / 1.5f));
         HandleStamina();
 
         if (currentStamina > 0)
@@ -130,17 +138,10 @@ public class StaminaController : MonoBehaviour
 
     public IEnumerator HeartBeat()
     {
-        while (currentStamina <= 60.0f && currentStamina > -1 && !healthController.dead)
-        {
-            beatTimer -= Time.deltaTime;
-            if (beatTimer <= 0)
-            {
-                yield return new WaitForSeconds(beatOffset);
-                beatAudioSource.PlayOneShot(beatAudio);
-                beatTimer = beatOffset;
-            }
-            beatAudioSource.volume = beatOffsetVolume;
-        }
+        heartAudioSource.clip = beatAudio;
+        heartAudioSource.loop = true;
+        heartAudioSource.Play();
+        yield return new WaitForSeconds(beatOffset);
 
     }
 }

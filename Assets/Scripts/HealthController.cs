@@ -9,9 +9,6 @@ public class HealthController : MonoBehaviour
     public float currentPlayerHealth = 100.0f;
     public bool dead = false;
     [SerializeField] private float maxHealth = 100.0f;
-    private float breathOffset = 0;
-    private float breathOffsetVolume = 0;
-    private float breathTimer = 0;
     private bool isBreathing = false;
     public bool isHurting = false;
 
@@ -26,8 +23,7 @@ public class HealthController : MonoBehaviour
     [SerializeField] private AudioMixer audioMixer = null;
     public AudioSource hurtAudioSource;
     public AudioSource deathAudioSource;
-    public AudioSource breatheAudioSource;
-
+    public AudioSource beatAudioSource;
 
     public IEnumerator coroutine = null;
 
@@ -35,8 +31,8 @@ public class HealthController : MonoBehaviour
     {
         hurtAudioSource = GetComponent<AudioSource>();
         deathAudioSource = GetComponent<AudioSource>();
-        breatheAudioSource = gameObject.AddComponent<AudioSource>();
-        breatheAudioSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Master")[0];
+        beatAudioSource = gameObject.AddComponent<AudioSource>();
+        beatAudioSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Master")[1];
     }
 
     private float offsets(float value1, float value2)
@@ -48,9 +44,10 @@ public class HealthController : MonoBehaviour
 
     private void Update()
     {
-        breathOffset = offsets(0.5f, 0.15f);
-        breathOffsetVolume = offsets(0.7f, 0.9f);
-        breatheAudioSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Master")[0];
+        beatAudioSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Master")[1];
+        beatAudioSource.outputAudioMixerGroup.audioMixer.SetFloat("HeartPitch", offsets(1f / 1.7f, 1f / 2.1f));
+        beatAudioSource.pitch = offsets(1.7f, 2.1f);
+        beatAudioSource.volume = offsets(0.2f, 0.4f);
         coroutine = Breathing();
         if (currentPlayerHealth > 0)
         {
@@ -102,6 +99,7 @@ public class HealthController : MonoBehaviour
 
     public void Death()
     {
+        beatAudioSource.Stop();
         if (!dead)
         {
             StartCoroutine(KillPlayer());
@@ -126,17 +124,6 @@ public class HealthController : MonoBehaviour
         }
     }
 
-    public void playSound(AudioSource source, AudioClip clip)
-    {
-        source.clip = clip;
-        source.Play();
-    }
-
-    public void stopSound(AudioSource source)
-    {
-        source.Stop();
-    }
-
     public IEnumerator HurtFlash()
     {
         bloodBorder.enabled = true;
@@ -153,12 +140,9 @@ public class HealthController : MonoBehaviour
 
     public IEnumerator Breathing()
     {
-        audioMixer.SetFloat("musicVol", breathOffsetVolume);
-        breatheAudioSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Master")[0];
-        breatheAudioSource.clip = breathAudio;
-        breatheAudioSource.loop = true;
-        breatheAudioSource.Play();
-        breatheAudioSource.volume = breathOffsetVolume;
+        beatAudioSource.clip = breathAudio;
+        beatAudioSource.loop = true;
+        beatAudioSource.Play();
         yield return new WaitForSeconds(0.7f);
     }
 }

@@ -129,6 +129,7 @@ public class FPSController : MonoBehaviour
         playerCamera = GetComponentInChildren<Camera>();
         charController = GetComponent<CharacterController>();
         defaultYPos = playerCamera.transform.localPosition.y;
+        footstepAudioSource.outputAudioMixerGroup = null;
         defaultFOV = playerCamera.fieldOfView;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
