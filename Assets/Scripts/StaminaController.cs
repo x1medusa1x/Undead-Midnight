@@ -17,8 +17,6 @@ public class StaminaController : MonoBehaviour
 
     [Header("Audio Effect")]
     [SerializeField] private AudioClip beatAudio = null;
-    [SerializeField] private float beatOffset = 0;
-    [SerializeField] private float beatOffsetVolume = 0;
     [SerializeField] private AudioMixer audioMixer = null;
     private bool isBeating = false;
     public AudioSource heartAudioSource;
@@ -141,7 +139,7 @@ public class StaminaController : MonoBehaviour
         heartAudioSource.clip = beatAudio;
         heartAudioSource.loop = true;
         heartAudioSource.Play();
-        yield return new WaitForSeconds(beatOffset);
+        yield return new WaitForSeconds(0.7f);
 
     }
 }
