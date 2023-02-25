@@ -6,6 +6,7 @@ public class FPSController : MonoBehaviour
 {
     public bool CanMove { get; private set; } = true;
     private bool isSprinting => canSprint && Input.GetKey(sprintKey);
+    public bool isWalking = false;
     private bool shouldJump => Input.GetKeyDown(jumpKey) && charController.isGrounded;
     private bool shouldCrouch => Input.GetKeyDown(crouchKey) && !duringCrouchAnimation && charController.isGrounded;
 
@@ -117,7 +118,7 @@ public class FPSController : MonoBehaviour
     private Interactable currentInteractable;
 
     private Camera playerCamera;
-    private CharacterController charController;
+    public CharacterController charController;
 
     private Vector3 moveDirection;
     public Vector2 currentInput;
@@ -176,6 +177,8 @@ public class FPSController : MonoBehaviour
                                     (isCrouching ? crouchSpeed : isSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
         float moveDirectionY = moveDirection.y;
         moveDirection = (transform.TransformDirection(Vector3.forward) * currentInput.x) + (transform.TransformDirection(Vector3.right) * currentInput.y);
+        isWalking = (currentInput.x != 0 || currentInput.y != 0) && charController.isGrounded;
+
         moveDirection.y = moveDirectionY;
     }
 
