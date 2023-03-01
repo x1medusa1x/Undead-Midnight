@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: MedKit
   m_EditorClassIdentifier: 
   id: 1
-  itemName: MedKit
-  value: 30
+  title: Large MedKit
+  description: Heals large amounts of health
+  maxAmount: 3
   icon: {fileID: 21300000, guid: 34d243a2fb083944dadd6667d4538894, type: 3}
