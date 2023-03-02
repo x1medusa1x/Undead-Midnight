@@ -6,7 +6,12 @@ using UnityEngine.UI;
 public class InventoryManager : MonoBehaviour
 {
     public static InventoryManager Instance;
-    //public List<Item> Items = new List<Item>();
+
+    public Canvas InventoryCanvas;
+    public CarouselView carouselView = null;
+
+    public Sprite emptySlot = null;
+
     private Dictionary<Item, int> Items = new Dictionary<Item, int>();
     private GameObject obj = null;
 
@@ -29,6 +34,88 @@ public class InventoryManager : MonoBehaviour
             ImageField.SetActive(false);
             BottomSeparator.SetActive(false);
         }
+
+    }
+
+    private void Update()
+    {
+        var firstItem = GameObject.Find("CraftingContent").transform.Find("Triangle").transform.Find("FirstItem");
+        var secondItem = GameObject.Find("CraftingContent").transform.Find("Triangle").transform.Find("SecondItem");
+        var thirdItem = GameObject.Find("CraftingContent").transform.Find("Triangle").transform.Find("ThirdItem");
+
+        var firstIcon = firstItem.Find("Icon").gameObject.GetComponent<Image>();
+        var secondIcon = secondItem.Find("Icon").gameObject.GetComponent<Image>();
+        var thirdIcon = thirdItem.Find("Icon").gameObject.GetComponent<Image>();
+
+        var firstC = firstItem.Find("Count").gameObject.GetComponent<Image>();
+        var secondC = secondItem.Find("Count").gameObject.GetComponent<Image>();
+        var thirdC = thirdItem.Find("Count").gameObject.GetComponent<Image>();
+
+        var firstCN = firstItem.Find("CountNumber").gameObject.GetComponent<TMP_Text>();
+        var secondCN = secondItem.Find("CountNumber").gameObject.GetComponent<TMP_Text>();
+        var thirdCN = thirdItem.Find("CountNumber").gameObject.GetComponent<TMP_Text>();
+
+        var firstNN = firstItem.Find("NeededNumber").gameObject.GetComponent<TMP_Text>();
+        var secondNN = secondItem.Find("NeededNumber").gameObject.GetComponent<TMP_Text>();
+        var thirdNN = thirdItem.Find("NeededNumber").gameObject.GetComponent<TMP_Text>();
+
+        var firstSlash = firstItem.Find("Slash").gameObject.GetComponent<TMP_Text>();
+        var secondSlash = secondItem.Find("Slash").gameObject.GetComponent<TMP_Text>();
+        var thirdSlash = thirdItem.Find("Slash").gameObject.GetComponent<TMP_Text>();
+
+        if (carouselView.CraftItemIcon.firstIcon != null)
+        {
+            firstIcon.sprite = carouselView.CraftItemIcon.firstIcon;
+            firstNN.text = carouselView.CraftItemIcon.firstAmount.ToString();
+            firstC.gameObject.SetActive(true);
+            firstNN.gameObject.SetActive(true);
+            firstCN.gameObject.SetActive(true);
+            firstSlash.gameObject.SetActive(true);
+        }
+        else
+        {
+            firstIcon.sprite = emptySlot;
+            firstC.gameObject.SetActive(false);
+            firstNN.gameObject.SetActive(false);
+            firstCN.gameObject.SetActive(false);
+            firstSlash.gameObject.SetActive(false);
+        }
+        if (carouselView.CraftItemIcon.secondIcon != null)
+        {
+            secondIcon.sprite = carouselView.CraftItemIcon.secondIcon;
+            secondNN.text = carouselView.CraftItemIcon.secondAmount.ToString();
+            secondC.gameObject.SetActive(true);
+            secondNN.gameObject.SetActive(true);
+            secondCN.gameObject.SetActive(true);
+            secondSlash.gameObject.SetActive(true);
+        }
+        else
+        {
+            secondIcon.sprite = emptySlot;
+            secondC.gameObject.SetActive(false);
+            secondNN.gameObject.SetActive(false);
+            secondCN.gameObject.SetActive(false);
+            secondSlash.gameObject.SetActive(false);
+        }
+        if (carouselView.CraftItemIcon.thirdIcon != null)
+        {
+            thirdIcon.sprite = carouselView.CraftItemIcon.thirdIcon;
+            thirdNN.text = carouselView.CraftItemIcon.thirdAmount.ToString();
+            thirdC.gameObject.SetActive(true);
+            thirdNN.gameObject.SetActive(true);
+            thirdCN.gameObject.SetActive(true);
+            thirdSlash.gameObject.SetActive(true);
+        }
+        else
+        {
+            thirdIcon.sprite = emptySlot;
+            thirdC.gameObject.SetActive(false);
+            thirdNN.gameObject.SetActive(false);
+            thirdCN.gameObject.SetActive(false);
+            thirdSlash.gameObject.SetActive(false);
+        }
+
+
     }
 
     public void Add(Item item)
