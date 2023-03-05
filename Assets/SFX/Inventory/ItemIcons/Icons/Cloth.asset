@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbe354d66e5ada44b8450a6bf8e94989, type: 3}
   m_Name: Cloth
   m_EditorClassIdentifier: 
-  id: 0
-  title: 
-  description: 
-  maxAmount: 0
-  icon: {fileID: 0}
+  id: 9
+  title: Cloth
+  description: Used exclusively in crafting
+  maxAmount: 5
+  icon: {fileID: 21300000, guid: 71404c6c9e77a8d4a913cb615d7c1db7, type: 3}

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbe354d66e5ada44b8450a6bf8e94989, type: 3}
   m_Name: Battery
   m_EditorClassIdentifier: 
-  id: 0
-  title: 
-  description: 
-  maxAmount: 0
-  icon: {fileID: 0}
+  id: 12
+  title: Battery
+  description: Lithium battery for the flashlight
+  maxAmount: 5
+  icon: {fileID: 21300000, guid: ea5de46a97ef1c8448a6fe04914a7b08, type: 3}

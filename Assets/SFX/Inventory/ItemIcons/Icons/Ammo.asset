@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbe354d66e5ada44b8450a6bf8e94989, type: 3}
   m_Name: Ammo
   m_EditorClassIdentifier: 
-  id: 0
-  title: 
-  description: 
-  maxAmount: 0
+  id: 8
+  title: Sling Ammo
+  description: Ammo used for the slingshot
+  maxAmount: 20
   icon: {fileID: 0}

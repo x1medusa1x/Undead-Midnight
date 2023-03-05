@@ -15,5 +15,5 @@ MonoBehaviour:
   id: 2
   title: Large MedKit
   description: Heals large amounts of health
-  maxAmount: 3
+  maxAmount: 2
   icon: {fileID: 21300000, guid: 34d243a2fb083944dadd6667d4538894, type: 3}

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbe354d66e5ada44b8450a6bf8e94989, type: 3}
   m_Name: Shiv
   m_EditorClassIdentifier: 
-  id: 0
-  title: 
-  description: 
-  maxAmount: 0
-  icon: {fileID: 0}
+  id: 5
+  title: Shiv
+  description: Used in crafting and as a utility
+  maxAmount: 2
+  icon: {fileID: 21300000, guid: 1b4d0b184c2ed0e43bab8dc07cd3cf13, type: 3}

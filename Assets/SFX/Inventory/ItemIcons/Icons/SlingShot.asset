@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbe354d66e5ada44b8450a6bf8e94989, type: 3}
   m_Name: SlingShot
   m_EditorClassIdentifier: 
-  id: 0
-  title: 
-  description: 
-  maxAmount: 0
-  icon: {fileID: 0}
+  id: 7
+  title: SlingShot
+  description: Long range weapon
+  maxAmount: 1
+  icon: {fileID: 21300000, guid: 60c4aa2158b8f444a9c7630576a5bc55, type: 3}
