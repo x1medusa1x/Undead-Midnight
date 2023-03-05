@@ -8,4 +8,8 @@ public class CraftItemIcon : MonoBehaviour
     public int secondAmount = 0;
     public Sprite thirdIcon = null;
     public int thirdAmount = 0;
+
+    public int firstId = -1;
+    public int secondId = -1;
+    public int thirdId = -1;
 }

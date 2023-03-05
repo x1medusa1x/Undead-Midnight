@@ -7,6 +7,10 @@ public class FPSController : MonoBehaviour
     public bool CanMove { get; private set; } = true;
     private bool isSprinting => canSprint && Input.GetKey(sprintKey);
     public bool isWalking = false;
+
+    public GameObject Inventory = null;
+
+    public bool isInInventoryView = false;
     private bool shouldJump => Input.GetKeyDown(jumpKey) && charController.isGrounded;
     private bool shouldCrouch => Input.GetKeyDown(crouchKey) && !duringCrouchAnimation && charController.isGrounded;
 
@@ -23,6 +27,7 @@ public class FPSController : MonoBehaviour
     [SerializeField] private bool canZoom = true;
     [SerializeField] private bool canInteract = true;
     [SerializeField] private bool willSlideOnSlopes = true;
+    [SerializeField] private bool canEnterInventory = true;
     [SerializeField] private bool useFootsteps = true;
 
     [Header("Controls")]
@@ -167,7 +172,19 @@ public class FPSController : MonoBehaviour
             {
                 HandleFootsteps();
             }
+            if (canEnterInventory)
+            {
+                HandleInventoryCanvas();
+            }
             ApplyFinalMovements();
+        }
+    }
+
+    private void HandleInventoryCanvas()
+    {
+        if (Input.GetKeyDown(KeyCode.I))
+        {
+            Inventory.gameObject.SetActive(!Inventory.gameObject.activeSelf);
         }
     }
 
