@@ -29,8 +29,13 @@ public class InventoryManager : MonoBehaviour
     public GameObject ImageField;
     public GameObject BottomSeparator;
 
+    private StackPosition[] stackPositions;
+
+    private int stackId = 0;
+
     private void Awake()
     {
+        stackPositions = FindObjectsOfType<StackPosition>();
         Instance = this;
         if (fPSController.isInInventoryView)
         {
@@ -49,6 +54,8 @@ public class InventoryManager : MonoBehaviour
 
     private void Update()
     {
+        stackPositions = FindObjectsOfType<StackPosition>();
+
         if (Input.GetKeyDown(KeyCode.I))
         {
             InventoryGridContent.gameObject.SetActive(true);
@@ -155,43 +162,92 @@ public class InventoryManager : MonoBehaviour
             BottomSeparator.SetActive(true);
 
         }
+
+        var inStack = InStack(stackPositions, item);
+
         if (Items.TryGetValue(item, out var current))
         {
-            Items[item] = ++current;
-            print(Items[item] + "    " + JsonConvert.SerializeObject(Items));
+            if (current + 1 >= inStack.maxAmount)
+            {
+                inStack.isFull = true;
+                NewItem(item, 0);
+            }
+            else
+            {
+
+                Items[item] = ++current;
+
+
+                if (inStack != null)
+                {
+                    if (current < inStack.maxAmount)
+                    {
+                        var itemCount = inStack.transform.Find("CountNumber").GetComponent<TMP_Text>();
+                        itemCount.text = $"{current % item.maxAmount + 1}";
+                    }
+                    else
+                    {
+                        inStack.isFull = true;
+                    }
+                }
+            }
+
         }
         else
         {
-            current = 0;
             Items.Add(item, 0);
+            NewItem(item, 0);
         }
-
-        ItemsPrev.Add(item);
     }
 
-    public void Remove(Item item)
+    public StackPosition InStack(StackPosition[] stackPositions, Item item)
     {
-        Items.Remove(item);
+        StackPosition ret = null;
+        foreach (StackPosition obj in stackPositions)
+        {
+            print(JsonConvert.SerializeObject(obj.id));
+
+            if (obj.itemId == item.id && !obj.isFull)
+            {
+                ret = obj;
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    private void NewItem(Item item, int count)
+    {
+        obj = Instantiate(InventoryItem, ItemContent);
+        var itemStackPos = obj.GetComponent<StackPosition>();
+        var itemIcon = obj.transform.Find("Icon").GetComponent<Image>();
+        var itemCount = obj.transform.Find("CountNumber").GetComponent<TMP_Text>();
+        var button = obj.transform.gameObject.GetComponent<Button>();
+
+        button.onClick.AddListener(delegate { PressButton(item); }); ;
+        itemCount.text = $"{count % item.maxAmount + 1}";
+        itemIcon.sprite = item.icon;
+        itemStackPos.id += 1;
+        itemStackPos.maxAmount = item.maxAmount;
+        itemStackPos.isFull = false;
+        itemStackPos.itemId = item.id;
     }
 
     private void ShowItem(Item item, int count)
     {
-        if (count % item.maxAmount == 0)
-        {
-            obj = Instantiate(InventoryItem, ItemContent);
-            var itemIcon = obj.transform.Find("Icon").GetComponent<Image>();
-            var itemCount = obj.transform.Find("CountNumber").GetComponent<TMP_Text>();
-            var button = obj.transform.gameObject.GetComponent<Button>();
 
-            button.onClick.AddListener(delegate { PressButton(item); }); ;
-            itemCount.text = $"{count % item.maxAmount + 1}";
-            itemIcon.sprite = item.icon;
-        }
-        else
-        {
-            var itemCount = obj.transform.Find("CountNumber").GetComponent<TMP_Text>();
-            itemCount.text = $"{count % item.maxAmount + 1}";
-        }
+        //if (count % item.maxAmount == 0)
+        //{
+
+        //}
+        //else
+        //{
+        //    var itemCount = obj.transform.Find("CountNumber").GetComponent<TMP_Text>();
+        //    itemCount.text = $"{count % item.maxAmount + 1}";
+        //}
+
+
     }
 
     public void ListItems()
