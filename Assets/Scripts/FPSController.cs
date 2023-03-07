@@ -137,6 +137,7 @@ public class FPSController : MonoBehaviour
         defaultYPos = playerCamera.transform.localPosition.y;
         footstepAudioSource.outputAudioMixerGroup = null;
         defaultFOV = playerCamera.fieldOfView;
+        Inventory.gameObject.transform.localScale = Vector3.zero;
         //Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = true;
     }
@@ -184,7 +185,16 @@ public class FPSController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.I))
         {
-            Inventory.gameObject.SetActive(!Inventory.gameObject.activeSelf);
+            if (isInInventoryView)
+            {
+                Inventory.gameObject.transform.localScale = Vector3.zero;
+                isInInventoryView = false;
+            }
+            else
+            {
+                Inventory.gameObject.transform.localScale = new Vector3(1, 1, 1);
+                isInInventoryView = true;
+            }
         }
     }
 

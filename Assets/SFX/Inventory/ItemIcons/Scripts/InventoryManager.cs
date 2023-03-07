@@ -1,5 +1,5 @@
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,16 +31,25 @@ public class InventoryManager : MonoBehaviour
 
     private StackPosition[] stackPositions;
 
-    private int stackId = 0;
+    public Image progressBar = null;
+    public Button craftButton = null;
+
+    private int currentValue = 0;
+    private int maxValue = 100;
+
+    private int currentPage = 0;
+
+    private bool canBeCrafted = false;
 
     private void Awake()
     {
         stackPositions = FindObjectsOfType<StackPosition>();
+        progressBar.gameObject.GetComponent<Image>().fillAmount = 0;
         Instance = this;
         if (fPSController.isInInventoryView)
         {
-            InventoryGridContent.gameObject.SetActive(true);
-            CraftingContent.gameObject.SetActive(false);
+            InventoryGridContent.gameObject.transform.localScale = new Vector3(1, 1, 1);
+            CraftingContent.gameObject.transform.localScale = Vector3.zero;
         }
         if (Items.Count == 0)
         {
@@ -56,15 +65,27 @@ public class InventoryManager : MonoBehaviour
     {
         stackPositions = FindObjectsOfType<StackPosition>();
 
+        var toBeCrafted = true;
+
         if (Input.GetKeyDown(KeyCode.I))
         {
-            InventoryGridContent.gameObject.SetActive(true);
-            CraftingContent.gameObject.SetActive(false);
+            InventoryGridContent.gameObject.transform.localScale = new Vector3(1, 1, 1);
+            CraftingContent.gameObject.transform.localScale = Vector3.zero;
         }
         if (Input.GetKeyDown(KeyCode.O))
         {
-            InventoryGridContent.gameObject.SetActive(!InventoryGridContent.gameObject.activeSelf);
-            CraftingContent.gameObject.SetActive(!CraftingContent.gameObject.activeSelf);
+            if (currentPage == 0)
+            {
+                InventoryGridContent.gameObject.transform.localScale = Vector3.zero;
+                CraftingContent.gameObject.transform.localScale = new Vector3(1, 1, 1);
+                currentPage = 1;
+            }
+            else
+            {
+                InventoryGridContent.gameObject.transform.localScale = new Vector3(1, 1, 1);
+                CraftingContent.gameObject.transform.localScale = Vector3.zero;
+                currentPage = 0;
+            }
         }
         if (GameObject.Find("CraftingContent"))
         {
@@ -92,8 +113,6 @@ public class InventoryManager : MonoBehaviour
             var secondSlash = secondItem.Find("Slash").gameObject.GetComponent<TMP_Text>();
             var thirdSlash = thirdItem.Find("Slash").gameObject.GetComponent<TMP_Text>();
 
-            print(JsonConvert.SerializeObject(Items));
-
             if (firstItem && secondItem && thirdItem && carouselView && carouselView.CraftItemIcon)
             {
 
@@ -101,6 +120,11 @@ public class InventoryManager : MonoBehaviour
                 {
                     firstIcon.sprite = carouselView.CraftItemIcon.firstIcon;
                     firstNN.text = carouselView.CraftItemIcon.firstAmount.ToString();
+                    firstCN.text = ItemsPrev.Where(item => item.id == carouselView.CraftItemIcon.firstId).Count().ToString();
+                    if (ItemsPrev.Where(item => item.id == carouselView.CraftItemIcon.firstId).Count() < carouselView.CraftItemIcon.firstAmount)
+                    {
+                        toBeCrafted = false;
+                    }
                     firstC.gameObject.SetActive(true);
                     firstNN.gameObject.SetActive(true);
                     firstCN.gameObject.SetActive(true);
@@ -118,6 +142,11 @@ public class InventoryManager : MonoBehaviour
                 {
                     secondIcon.sprite = carouselView.CraftItemIcon.secondIcon;
                     secondNN.text = carouselView.CraftItemIcon.secondAmount.ToString();
+                    secondCN.text = ItemsPrev.Where(item => item.id == carouselView.CraftItemIcon.secondId).Count().ToString();
+                    if (ItemsPrev.Where(item => item.id == carouselView.CraftItemIcon.secondId).Count() < carouselView.CraftItemIcon.secondAmount)
+                    {
+                        toBeCrafted = false;
+                    }
                     secondC.gameObject.SetActive(true);
                     secondNN.gameObject.SetActive(true);
                     secondCN.gameObject.SetActive(true);
@@ -135,6 +164,11 @@ public class InventoryManager : MonoBehaviour
                 {
                     thirdIcon.sprite = carouselView.CraftItemIcon.thirdIcon;
                     thirdNN.text = carouselView.CraftItemIcon.thirdAmount.ToString();
+                    thirdCN.text = ItemsPrev.Where(item => item.id == carouselView.CraftItemIcon.thirdId).Count().ToString();
+                    if (ItemsPrev.Where(item => item.id == carouselView.CraftItemIcon.thirdId).Count() < carouselView.CraftItemIcon.thirdAmount)
+                    {
+                        toBeCrafted = false;
+                    }
                     thirdC.gameObject.SetActive(true);
                     thirdNN.gameObject.SetActive(true);
                     thirdCN.gameObject.SetActive(true);
@@ -149,6 +183,32 @@ public class InventoryManager : MonoBehaviour
                     thirdSlash.gameObject.SetActive(false);
                 }
             }
+            if (toBeCrafted)
+            {
+                canBeCrafted = true;
+            }
+            else
+            {
+                canBeCrafted = false;
+            }
+        }
+        if (canBeCrafted || true)
+        {
+            progressBar.gameObject.GetComponent<Image>().fillAmount = currentValue;
+            craftButton.gameObject.SetActive(true);
+
+            if (RectTransformUtility.RectangleContainsScreenPoint(craftButton.GetComponent<RectTransform>(), Input.mousePosition))
+            {
+                if (Input.GetMouseButtonDown(0))
+                {
+                    currentValue += 10;
+                }
+            }
+        }
+        else
+        {
+            progressBar.gameObject.GetComponent<Image>().fillAmount = 0;
+            craftButton.gameObject.SetActive(false);
         }
     }
 
@@ -163,21 +223,21 @@ public class InventoryManager : MonoBehaviour
 
         }
 
+        ItemsPrev.Add(item);
+
         var inStack = InStack(stackPositions, item);
 
         if (Items.TryGetValue(item, out var current))
         {
-            if (current + 1 >= inStack.maxAmount)
+
+            Items[item] = ++current;
+            if (Items[item] >= inStack.maxAmount)
             {
-                inStack.isFull = true;
+                Items[item] = 0;
                 NewItem(item, 0);
             }
             else
             {
-
-                Items[item] = ++current;
-
-
                 if (inStack != null)
                 {
                     if (current < inStack.maxAmount)
@@ -187,11 +247,11 @@ public class InventoryManager : MonoBehaviour
                     }
                     else
                     {
-                        inStack.isFull = true;
+                        Items[item] = ++current;
+                        NewItem(item, 0);
                     }
                 }
             }
-
         }
         else
         {
@@ -205,8 +265,6 @@ public class InventoryManager : MonoBehaviour
         StackPosition ret = null;
         foreach (StackPosition obj in stackPositions)
         {
-            print(JsonConvert.SerializeObject(obj.id));
-
             if (obj.itemId == item.id && !obj.isFull)
             {
                 ret = obj;
@@ -228,34 +286,10 @@ public class InventoryManager : MonoBehaviour
         button.onClick.AddListener(delegate { PressButton(item); }); ;
         itemCount.text = $"{count % item.maxAmount + 1}";
         itemIcon.sprite = item.icon;
-        itemStackPos.id += 1;
+        itemStackPos.id = itemStackPos.GetInstanceID();
         itemStackPos.maxAmount = item.maxAmount;
         itemStackPos.isFull = false;
         itemStackPos.itemId = item.id;
-    }
-
-    private void ShowItem(Item item, int count)
-    {
-
-        //if (count % item.maxAmount == 0)
-        //{
-
-        //}
-        //else
-        //{
-        //    var itemCount = obj.transform.Find("CountNumber").GetComponent<TMP_Text>();
-        //    itemCount.text = $"{count % item.maxAmount + 1}";
-        //}
-
-
-    }
-
-    public void ListItems()
-    {
-        foreach (var item in Items)
-        {
-            ShowItem(item.Key, item.Value);
-        }
     }
 
     public void PressButton(Item item)
