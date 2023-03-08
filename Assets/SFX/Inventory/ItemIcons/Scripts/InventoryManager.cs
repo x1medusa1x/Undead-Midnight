@@ -34,17 +34,15 @@ public class InventoryManager : MonoBehaviour
     public Image progressBar = null;
     public Button craftButton = null;
 
-    private int currentValue = 0;
-    private int maxValue = 100;
-
     private int currentPage = 0;
+    public bool crafted = false;
 
-    private bool canBeCrafted = false;
+    public bool canBeCrafted = false;
 
     private void Awake()
     {
         stackPositions = FindObjectsOfType<StackPosition>();
-        progressBar.gameObject.GetComponent<Image>().fillAmount = 0;
+
         Instance = this;
         if (fPSController.isInInventoryView)
         {
@@ -58,6 +56,8 @@ public class InventoryManager : MonoBehaviour
             ImageField.SetActive(false);
             BottomSeparator.SetActive(false);
         }
+
+        progressBar.gameObject.GetComponent<Image>().fillAmount = 0;
 
     }
 
@@ -192,24 +192,60 @@ public class InventoryManager : MonoBehaviour
                 canBeCrafted = false;
             }
         }
-        if (canBeCrafted || true)
+        if (canBeCrafted)
         {
-            progressBar.gameObject.GetComponent<Image>().fillAmount = currentValue;
             craftButton.gameObject.SetActive(true);
-
-            if (RectTransformUtility.RectangleContainsScreenPoint(craftButton.GetComponent<RectTransform>(), Input.mousePosition))
-            {
-                if (Input.GetMouseButtonDown(0))
-                {
-                    currentValue += 10;
-                }
-            }
         }
         else
         {
             progressBar.gameObject.GetComponent<Image>().fillAmount = 0;
             craftButton.gameObject.SetActive(false);
         }
+
+        if (crafted)
+        {
+            HandleCraft();
+            crafted = false;
+        }
+    }
+
+    private StackPosition getSmallestCurrentValuePos(int id, int minVal)
+    {
+        StackPosition pos = null;
+        foreach (StackPosition obj in stackPositions)
+        {
+            if (id != -1)
+            {
+                if (obj.itemId == carouselView.CraftItemIcon.firstId)
+                {
+                    if (obj.currentValue < minVal)
+                    {
+                        pos = obj;
+                        minVal = obj.currentValue;
+                    }
+                }
+            }
+        }
+        return pos;
+    }
+
+    private void HandleRemoveFromStack(StackPosition pos, int amount)
+    {
+        print(pos.currentValue + "  " + amount);
+        if (amount >= pos.currentValue)
+        {
+            Destroy(pos.gameObject);
+        }
+    }
+
+    public void HandleCraft()
+    {
+        int minVal = 21;
+        StackPosition lastStackFirstPos = getSmallestCurrentValuePos(carouselView.CraftItemIcon.firstId, minVal);
+        StackPosition lastStackSecondPos = getSmallestCurrentValuePos(carouselView.CraftItemIcon.secondId, minVal);
+        StackPosition lastStackThirdPos = getSmallestCurrentValuePos(carouselView.CraftItemIcon.thirdId, minVal);
+
+        HandleRemoveFromStack(lastStackFirstPos, carouselView.CraftItemIcon.firstAmount);
     }
 
     public void Add(Item item)
@@ -233,6 +269,7 @@ public class InventoryManager : MonoBehaviour
             Items[item] = ++current;
             if (Items[item] >= inStack.maxAmount)
             {
+                inStack.isFull = true;
                 Items[item] = 0;
                 NewItem(item, 0);
             }
@@ -244,6 +281,7 @@ public class InventoryManager : MonoBehaviour
                     {
                         var itemCount = inStack.transform.Find("CountNumber").GetComponent<TMP_Text>();
                         itemCount.text = $"{current % item.maxAmount + 1}";
+                        inStack.currentValue = current % item.maxAmount + 1;
                     }
                     else
                     {
@@ -290,6 +328,7 @@ public class InventoryManager : MonoBehaviour
         itemStackPos.maxAmount = item.maxAmount;
         itemStackPos.isFull = false;
         itemStackPos.itemId = item.id;
+        itemStackPos.currentValue = 1;
     }
 
     public void PressButton(Item item)
