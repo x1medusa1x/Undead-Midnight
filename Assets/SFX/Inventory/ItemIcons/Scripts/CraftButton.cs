@@ -1,8 +1,9 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class CraftButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
+public class CraftButton : MonoBehaviour, IPointerDownHandler
 {
 
     public InventoryManager inventoryManager = null;
@@ -10,29 +11,50 @@ public class CraftButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     private int currentValue = 0;
     private int maxValue = 100;
 
-    private bool isHolding = false;
+    private bool isCrafting = false;
 
-    private bool isWaiting = false;
-    public int parameterValue = 10; // Change the parameter value as desired
+    public bool hasCrafted = false;
+    public int parameterValue = 10;
 
-    public void OnPointerDown(PointerEventData eventData)
+    private Coroutine craftingCoroutine;
+
+    private void Update()
     {
-        if (eventData.button == PointerEventData.InputButton.Left)
+        if (isCrafting)
         {
-            isHolding = true;
-            isWaiting = false;
-            InvokeRepeating("Add", 0f, 0.1f);
+            if (currentValue < maxValue)
+            {
+                if (craftingCoroutine == null)
+                {
+                    craftingCoroutine = StartCoroutine(IncrementCurrentValue());
+                }
+            }
+            else
+            {
+                isCrafting = false;
+                hasCrafted = true;
+                craftingCoroutine = null;
+            }
         }
-    }
-
-    public void OnPointerUp(PointerEventData eventData)
-    {
-        if (eventData.button == PointerEventData.InputButton.Left)
+        else
         {
-            isHolding = false;
-            isWaiting = true;
-            CancelInvoke();
-            InvokeRepeating("Subtract", 0.5f, 0.05f);
+            if (currentValue > 0)
+            {
+                if (craftingCoroutine == null)
+                {
+                    craftingCoroutine = StartCoroutine(DecrementCurrentValue());
+
+                }
+            }
+            else
+            {
+                hasCrafted = false;
+                craftingCoroutine = null;
+                if (inventoryManager.canBeCrafted == false)
+                {
+                    inventoryManager.craftButton.gameObject.SetActive(false);
+                }
+            }
         }
     }
 
@@ -41,32 +63,37 @@ public class CraftButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         return (float)currentValue / maxValue;
     }
 
-    public void Add()
+    private IEnumerator IncrementCurrentValue()
     {
-        currentValue += 10;
-
-        if (currentValue > maxValue)
-        {
-            currentValue = maxValue;
-            inventoryManager.crafted = true;
-        }
+        yield return new WaitForSeconds(0.05f);
+        currentValue += parameterValue;
         inventoryManager.progressBar.gameObject.GetComponent<Image>().fillAmount = Normalise();
-    }
-
-    public void Subtract()
-    {
-        if (!isHolding)
+        craftingCoroutine = null;
+        if (currentValue == maxValue)
         {
-            currentValue -= 10;
-
-            if (currentValue <= 0)
-            {
-                currentValue = 0;
-            }
-            inventoryManager.progressBar.gameObject.GetComponent<Image>().fillAmount = Normalise();
+            inventoryManager.HandleCraft();
+            hasCrafted = true;
         }
-        isWaiting = false;
-
     }
 
+    private IEnumerator DecrementCurrentValue()
+    {
+        yield return new WaitForSeconds(0.02f);
+        currentValue -= parameterValue;
+        inventoryManager.progressBar.gameObject.GetComponent<Image>().fillAmount = Normalise();
+        craftingCoroutine = null;
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        if (currentValue == 0 && !hasCrafted)
+        {
+            isCrafting = true;
+        }
+        else if (currentValue == maxValue && hasCrafted)
+        {
+            currentValue = 0;
+            hasCrafted = false;
+        }
+    }
 }

@@ -793,10 +793,10 @@ RectTransform:
   m_Father: {fileID: 871731516}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 388, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &62286692
 MonoBehaviour:
@@ -3032,7 +3032,9 @@ MonoBehaviour:
   BottomSeparator: {fileID: 673784583}
   progressBar: {fileID: 1583109625}
   craftButton: {fileID: 146845582}
+  crafted: 0
   canBeCrafted: 0
+  inStack: {fileID: 0}
 --- !u!1 &479445428
 GameObject:
   m_ObjectHideFlags: 0
@@ -5752,7 +5754,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: aae4b5afe3790194299f3cecf96bc610, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -10.104161
+      value: -19.53
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: aae4b5afe3790194299f3cecf96bc610, type: 3}
       propertyPath: m_LocalPosition.y

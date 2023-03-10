@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -38,6 +39,8 @@ public class InventoryManager : MonoBehaviour
     public bool crafted = false;
 
     public bool canBeCrafted = false;
+
+    public StackPosition inStack = null;
 
     private void Awake()
     {
@@ -196,17 +199,20 @@ public class InventoryManager : MonoBehaviour
         {
             craftButton.gameObject.SetActive(true);
         }
-        else
+    }
+
+    private void RemoveStackPosition(StackPosition stackPositionToRemove)
+    {
+        int indexToRemove = Array.IndexOf(stackPositions, stackPositionToRemove);
+        if (indexToRemove == -1)
         {
-            progressBar.gameObject.GetComponent<Image>().fillAmount = 0;
-            craftButton.gameObject.SetActive(false);
+            Debug.LogError($"StackPosition not found in stackPositions array: {stackPositionToRemove}");
+            return;
         }
 
-        if (crafted)
-        {
-            HandleCraft();
-            crafted = false;
-        }
+        List<StackPosition> stackPositionsList = new List<StackPosition>(stackPositions);
+        stackPositionsList.RemoveAt(indexToRemove);
+        stackPositions = stackPositionsList.ToArray();
     }
 
     private StackPosition getSmallestCurrentValuePos(int id, int minVal)
@@ -231,10 +237,49 @@ public class InventoryManager : MonoBehaviour
 
     private void HandleRemoveFromStack(StackPosition pos, int amount)
     {
-        print(pos.currentValue + "  " + amount);
-        if (amount >= pos.currentValue)
+        if (pos != null && amount >= pos.currentValue)
         {
+            var leftAmount = amount;
+
+            var itemPos = ItemsPrev.Find(item => item.id == pos.itemId);
+            var itemsPrevClone = new List<Item>(ItemsPrev);
+
+            foreach (Item item in ItemsPrev.Where(item => item.id == pos.itemId).Take(pos.currentValue))
+            {
+                itemsPrevClone.Remove(item);
+                --leftAmount;
+                Items[itemPos]--;
+            }
+
+            ItemsPrev = itemsPrevClone;
             Destroy(pos.gameObject);
+            RemoveStackPosition(pos);
+            inStack = InStack(stackPositions, itemPos);
+            if (leftAmount > 0)
+            {
+                StackPosition position = InStack(stackPositions, itemPos, true);
+                HandleRemoveFromStack(position, leftAmount);
+            }
+
+        }
+        else
+        {
+            if (pos != null)
+            {
+                var itemPos = ItemsPrev.Find(item => item.id == pos.itemId);
+                var itemsPrevClone = new List<Item>(ItemsPrev);
+
+                foreach (Item item in ItemsPrev.Where(item => item.id == pos.itemId).Take(amount))
+                {
+                    itemsPrevClone.Remove(item);
+                    Items[itemPos]--;
+                }
+
+                ItemsPrev = itemsPrevClone;
+                var itemCount = pos.transform.Find("CountNumber").GetComponent<TMP_Text>();
+                itemCount.text = $"{pos.currentValue - amount}";
+                pos.currentValue = pos.currentValue - amount;
+            }
         }
     }
 
@@ -246,6 +291,10 @@ public class InventoryManager : MonoBehaviour
         StackPosition lastStackThirdPos = getSmallestCurrentValuePos(carouselView.CraftItemIcon.thirdId, minVal);
 
         HandleRemoveFromStack(lastStackFirstPos, carouselView.CraftItemIcon.firstAmount);
+        HandleRemoveFromStack(lastStackSecondPos, carouselView.CraftItemIcon.secondAmount);
+        HandleRemoveFromStack(lastStackThirdPos, carouselView.CraftItemIcon.thirdAmount);
+
+
     }
 
     public void Add(Item item)
@@ -261,21 +310,22 @@ public class InventoryManager : MonoBehaviour
 
         ItemsPrev.Add(item);
 
-        var inStack = InStack(stackPositions, item);
+        inStack = InStack(stackPositions, item);
 
         if (Items.TryGetValue(item, out var current))
         {
 
             Items[item] = ++current;
-            if (Items[item] >= inStack.maxAmount)
+
+            if (inStack != null)
             {
-                inStack.isFull = true;
-                Items[item] = 0;
-                NewItem(item, 0);
-            }
-            else
-            {
-                if (inStack != null)
+                if (Items[item] >= inStack.maxAmount)
+                {
+                    inStack.isFull = true;
+                    Items[item] = 0;
+                    NewItem(item, 0);
+                }
+                else
                 {
                     if (current < inStack.maxAmount)
                     {
@@ -285,11 +335,18 @@ public class InventoryManager : MonoBehaviour
                     }
                     else
                     {
+                        inStack.isFull = true;
                         Items[item] = ++current;
                         NewItem(item, 0);
                     }
                 }
             }
+            else
+            {
+                Items[item] = 0;
+                NewItem(item, 0);
+            }
+
         }
         else
         {
@@ -298,15 +355,26 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    public StackPosition InStack(StackPosition[] stackPositions, Item item)
+    public StackPosition InStack(StackPosition[] stackPositions, Item item, bool isFull = false)
     {
         StackPosition ret = null;
         foreach (StackPosition obj in stackPositions)
         {
-            if (obj.itemId == item.id && !obj.isFull)
+            if (!isFull)
             {
-                ret = obj;
-                break;
+                if (obj.itemId == item.id && !obj.isFull)
+                {
+                    ret = obj;
+                    break;
+                }
+            }
+            else
+            {
+                if (obj.itemId == item.id)
+                {
+                    ret = obj;
+                    break;
+                }
             }
         }
 
