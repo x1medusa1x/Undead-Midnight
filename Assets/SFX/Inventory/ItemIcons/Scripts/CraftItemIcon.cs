@@ -9,6 +9,11 @@ public class CraftItemIcon : MonoBehaviour
     public Sprite thirdIcon = null;
     public int thirdAmount = 0;
 
+    public Transform ItemContent;
+    public GameObject InventoryItem;
+    public Item item;
+
+
     public int firstId = -1;
     public int secondId = -1;
     public int thirdId = -1;

@@ -64,11 +64,31 @@ public class InventoryManager : MonoBehaviour
 
     }
 
+    private void NextPage()
+    {
+        if (currentPage == 0)
+        {
+            InventoryGridContent.gameObject.transform.localScale = Vector3.zero;
+            CraftingContent.gameObject.transform.localScale = new Vector3(1, 1, 1);
+            currentPage = 1;
+        }
+        else
+        {
+            InventoryGridContent.gameObject.transform.localScale = new Vector3(1, 1, 1);
+            CraftingContent.gameObject.transform.localScale = Vector3.zero;
+            currentPage = 0;
+        }
+    }
+
     private void Update()
     {
         stackPositions = FindObjectsOfType<StackPosition>();
+        var button = GameObject.Find("TabChange").transform.GetComponent<Button>();
+        print(button);
 
         var toBeCrafted = true;
+
+        button.onClick.AddListener(NextPage);
 
         if (Input.GetKeyDown(KeyCode.I))
         {
@@ -222,7 +242,7 @@ public class InventoryManager : MonoBehaviour
         {
             if (id != -1)
             {
-                if (obj.itemId == carouselView.CraftItemIcon.firstId)
+                if (obj.itemId == id)
                 {
                     if (obj.currentValue < minVal)
                     {
@@ -285,19 +305,26 @@ public class InventoryManager : MonoBehaviour
 
     public void HandleCraft()
     {
-        int minVal = 21;
-        StackPosition lastStackFirstPos = getSmallestCurrentValuePos(carouselView.CraftItemIcon.firstId, minVal);
-        StackPosition lastStackSecondPos = getSmallestCurrentValuePos(carouselView.CraftItemIcon.secondId, minVal);
-        StackPosition lastStackThirdPos = getSmallestCurrentValuePos(carouselView.CraftItemIcon.thirdId, minVal);
+        StackPosition lastStackFirstPos = getSmallestCurrentValuePos(carouselView.CraftItemIcon.firstId, 21);
+        StackPosition lastStackSecondPos = getSmallestCurrentValuePos(carouselView.CraftItemIcon.secondId, 21);
+        StackPosition lastStackThirdPos = getSmallestCurrentValuePos(carouselView.CraftItemIcon.thirdId, 21);
 
-        HandleRemoveFromStack(lastStackFirstPos, carouselView.CraftItemIcon.firstAmount);
-        HandleRemoveFromStack(lastStackSecondPos, carouselView.CraftItemIcon.secondAmount);
-        HandleRemoveFromStack(lastStackThirdPos, carouselView.CraftItemIcon.thirdAmount);
+        if (lastStackFirstPos != null)
+            HandleRemoveFromStack(lastStackFirstPos, carouselView.CraftItemIcon.firstAmount);
+        if (lastStackSecondPos != null)
+            HandleRemoveFromStack(lastStackSecondPos, carouselView.CraftItemIcon.secondAmount);
+        if (lastStackThirdPos != null)
+            HandleRemoveFromStack(lastStackThirdPos, carouselView.CraftItemIcon.thirdAmount);
 
-
+        CraftItem();
     }
 
-    public void Add(Item item)
+    private void CraftItem()
+    {
+        Add(carouselView.CraftItemIcon.item, carouselView.CraftItemIcon.ItemContent, carouselView.CraftItemIcon.InventoryItem);
+    }
+
+    public void Add(Item item, Transform content = null, GameObject invItem = null)
     {
         if (Items.Count == 0)
         {
@@ -323,7 +350,7 @@ public class InventoryManager : MonoBehaviour
                 {
                     inStack.isFull = true;
                     Items[item] = 0;
-                    NewItem(item, 0);
+                    NewItem(item, 0, content, invItem);
                 }
                 else
                 {
@@ -337,21 +364,21 @@ public class InventoryManager : MonoBehaviour
                     {
                         inStack.isFull = true;
                         Items[item] = ++current;
-                        NewItem(item, 0);
+                        NewItem(item, 0, content, invItem);
                     }
                 }
             }
             else
             {
                 Items[item] = 0;
-                NewItem(item, 0);
+                NewItem(item, 0, content, invItem);
             }
 
         }
         else
         {
             Items.Add(item, 0);
-            NewItem(item, 0);
+            NewItem(item, 0, content, invItem);
         }
     }
 
@@ -381,9 +408,16 @@ public class InventoryManager : MonoBehaviour
         return ret;
     }
 
-    private void NewItem(Item item, int count)
+    private void NewItem(Item item, int count, Transform content = null, GameObject invItem = null)
     {
-        obj = Instantiate(InventoryItem, ItemContent);
+        if (content == null && invItem == null)
+        {
+            obj = Instantiate(InventoryItem, ItemContent);
+        }
+        else
+        {
+            obj = Instantiate(invItem, content);
+        }
         var itemStackPos = obj.GetComponent<StackPosition>();
         var itemIcon = obj.transform.Find("Icon").GetComponent<Image>();
         var itemCount = obj.transform.Find("CountNumber").GetComponent<TMP_Text>();
